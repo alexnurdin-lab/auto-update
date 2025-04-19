@@ -1,28 +1,52 @@
 #!/bin/bash
 
-# Update lagi pastikan semua repo ready
-sudo apt update -y
+# ===============================
+# Update sistem dulu
+# ===============================
+sudo apt update -y && sudo apt upgrade -y
 
-# Install Openbox sebagai window manager
-sudo apt install openbox -y
+# ===============================
+# Install LXQt, X server, LightDM, XRDP
+# ===============================
+sudo apt install -y lxqt-core xserver-xorg xinit lightdm xrdp xorgxrdp dbus-x11
 
-# Install tools minimal tambahan untuk LXQt
-sudo apt install -y pcmanfm featherpad qterminal
+# Set LightDM sebagai default Display Manager
+echo "/usr/sbin/lightdm" | sudo tee /etc/X11/default-display-manager
 
-# (Opsional) Tambahkan beberapa tool utilitas ringan
-sudo apt install -y lxappearance lxterminal gvfs gvfs-backends
+# ===============================
+# Install Openbox dan tools tambahan
+# ===============================
+sudo apt install -y openbox pcmanfm featherpad qterminal lxappearance lxterminal gvfs gvfs-backends
 
-# Bersihkan paket yang tidak perlu
-sudo apt autoremove -y
+# ===============================
+# Konfigurasi XRDP untuk LXQt session
+# ===============================
+# Hapus .xsession lama (jika ada)
+rm -f ~/.xsession
 
-# Info sukses
-echo ""
-echo "✅ Openbox + tools minimal berhasil diinstall!"
-echo "👉 Setelah ini logout dan login lagi ke RDP kamu."
-echo "👉 Pilih Openbox sebagai window manager saat LXQt bertanya."
-echo ""
+# Buat .xsession baru dengan environment LXQt
+cat > ~/.xsession <<EOF
+#!/bin/bash
+export DESKTOP_SESSION=lxqt
+export XDG_CURRENT_DESKTOP=lxqt
+lxqt-session
+EOF
 
-# Setting performance optimasi untuk LXQt
+# Jadikan executable
+chmod +x ~/.xsession
+
+# Edit /etc/xrdp/startwm.sh untuk LXQt
+sudo bash -c 'cat > /etc/xrdp/startwm.sh <<EOF
+#!/bin/sh
+. /etc/X11/Xsession
+EOF'
+
+# Jadikan startwm.sh executable
+sudo chmod +x /etc/xrdp/startwm.sh
+
+# ===============================
+# Setting performance LXQt (Openbox default + Numlock aktif)
+# ===============================
 mkdir -p ~/.config/lxqt
 cat > ~/.config/lxqt/session.conf <<EOF
 [General]
@@ -30,5 +54,31 @@ window_manager=openbox
 numlock=on
 EOF
 
-echo "✅ LXQt performance tweak applied (Openbox + Numlock aktif)"
+# ===============================
+# Firewall: Allow RDP port 3389
+# ===============================
+sudo ufw allow 3389/tcp || true
+
+# ===============================
+# Enable dan restart service
+# ===============================
+sudo systemctl enable lightdm
+sudo systemctl restart lightdm
+sudo systemctl enable xrdp
+sudo systemctl restart xrdp
+
+# ===============================
+# Bersihkan paket tidak penting
+# ===============================
+sudo apt autoremove -y
+
+# ===============================
+# Info Selesai
+# ===============================
+echo ""
+echo "✅ Installasi LXQt + Openbox + XRDP Full sudah selesai!"
+echo "👉 Sekarang reboot server: sudo reboot"
+echo "👉 Lalu RDP ke IP kamu."
+echo "👉 Pilih Xorg saat login RDP."
+echo "👉 Tidak akan blank hitam lagi!"
 echo ""
