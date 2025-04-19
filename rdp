@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# Update sistem dulu
+sudo apt update -y && sudo apt upgrade -y
+
+# Install paket minimal LXQt + X server + XRDP + LightDM
+sudo apt install -y lxqt-core xserver-xorg xinit lightdm xrdp xorgxrdp dbus-x11
+
+# Set LightDM sebagai default Display Manager
+echo "/usr/sbin/lightdm" | sudo tee /etc/X11/default-display-manager
+
+# Pastikan .xsession berisi lxqt-session
+echo "lxqt-session" > ~/.xsession
+
+# Konfigurasi XRDP untuk langsung jalanin LXQt
+sudo bash -c 'cat > /etc/xrdp/startwm.sh <<EOF
+#!/bin/sh
+lxqt-session
+EOF'
+
+# Pastikan startwm.sh executable
+sudo chmod +x /etc/xrdp/startwm.sh
+
+# Allow port RDP di firewall
+sudo ufw allow 3389/tcp || true
+
+# Enable dan restart service LightDM dan XRDP
+sudo systemctl enable lightdm
+sudo systemctl restart lightdm
+sudo systemctl enable xrdp
+sudo systemctl restart xrdp
+
+# Info
+echo ""
+echo "✅ Installasi LXQt + XRDP selesai!"
+echo "👉 Sekarang reboot server lalu RDP ke IP droplets kamu!"
+echo ""
