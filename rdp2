@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# Update lagi pastikan semua repo ready
+sudo apt update -y
+
+# Install Openbox sebagai window manager
+sudo apt install openbox -y
+
+# Install tools minimal tambahan untuk LXQt
+sudo apt install -y pcmanfm featherpad qterminal
+
+# (Opsional) Tambahkan beberapa tool utilitas ringan
+sudo apt install -y lxappearance lxterminal gvfs gvfs-backends
+
+# Bersihkan paket yang tidak perlu
+sudo apt autoremove -y
+
+# Info sukses
+echo ""
+echo "✅ Openbox + tools minimal berhasil diinstall!"
+echo "👉 Setelah ini logout dan login lagi ke RDP kamu."
+echo "👉 Pilih Openbox sebagai window manager saat LXQt bertanya."
+echo ""
+
+# Setting performance optimasi untuk LXQt
+mkdir -p ~/.config/lxqt
+cat > ~/.config/lxqt/session.conf <<EOF
+[General]
+window_manager=openbox
+numlock=on
+EOF
+
+echo "✅ LXQt performance tweak applied (Openbox + Numlock aktif)"
+echo ""
